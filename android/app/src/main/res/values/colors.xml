@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Telegram-inspired palette -->
+    <color name="primary">#0088cc</color>
+    <color name="primary_dark">#0077b3</color>
+    <color name="primary_light">#33aae0</color>
+
+    <color name="background">#f5f5f5</color>
+    <color name="surface">#ffffff</color>
+    <color name="surface_dark">#1a1a2e</color>
+
+    <color name="on_primary">#ffffff</color>
+    <color name="on_background">#222222</color>
+    <color name="on_surface">#222222</color>
+
+    <color name="text_primary">#222222</color>
+    <color name="text_secondary">#888888</color>
+    <color name="text_hint">#aaaaaa</color>
+
+    <!-- Status colors -->
+    <color name="status_connected">#4CAF50</color>
+    <color name="status_disconnected">#F44336</color>
+    <color name="status_connecting">#FFC107</color>
+
+    <!-- Dark theme -->
+    <color name="dark_background">#0d1117</color>
+    <color name="dark_surface">#161b22</color>
+    <color name="dark_text_primary">#e6edf3</color>
+    <color name="dark_text_secondary">#8b949e</color>
+</resources>

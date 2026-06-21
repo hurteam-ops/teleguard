@@ -1,0 +1,68 @@
+# =============================================================================
+# TeleFlow — Docker Compose for Local Development
+# =============================================================================
+#
+# Usage:
+#   cp .env.example .env  # Edit with your values
+#   docker compose up -d
+#
+# WARNING: Never commit the .env file to version control.
+
+version: '3.8'
+
+services:
+  # Main API server
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://teleflow:password@db:5432/teleflow?sslmode=disable
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - teleflow-net
+
+  # PostgreSQL for user accounts and subscription data
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: teleflow
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: teleflow
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teleflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    networks:
+      - teleflow-net
+
+  # Redis for rate limiting and session cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - teleflow-net
+
+volumes:
+  pgdata:
+
+networks:
+  teleflow-net:
+    driver: bridge

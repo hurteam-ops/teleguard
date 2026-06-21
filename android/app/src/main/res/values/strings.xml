@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TeleFlow</string>
+    <string name="app_tagline">Freedom. Security. Privacy.</string>
+
+    <!-- Connection states -->
+    <string name="state_connecting">Connecting…</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_disconnected">Disconnected</string>
+    <string name="state_error">Connection Error</string>
+
+    <!-- Buttons -->
+    <string name="btn_connect">Connect</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="btn_choose_country">Choose Country</string>
+    <string name="btn_sign_in">Sign in with Telegram</string>
+    <string name="btn_upgrade">Upgrade to Pro</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_split_tunnel">Split Tunneling</string>
+    <string name="settings_dns">DNS Settings</string>
+    <string name="settings_protocol">Protocol</string>
+
+    <!-- Premium -->
+    <string name="premium_title">TeleFlow Pro</string>
+    <string name="premium_required">Telegram Premium required for Pro features</string>
+    <string name="premium_verified">✓ Premium Verified</string>
+
+    <!-- Countries -->
+    <string name="country_auto">Automatic (Fastest)</string>
+    <string name="country_nl">Netherlands</string>
+    <string name="country_de">Germany</string>
+    <string name="country_us">United States</string>
+    <string name="country_jp">Japan</string>
+    <string name="country_sg">Singapore</string>
+
+    <!-- Errors -->
+    <string name="error_vpn_permission">VPN permission is required</string>
+    <string name="error_network">Network error. Check your connection.</string>
+    <string name="error_auth">Authentication failed. Please sign in again.</string>
+    <string name="error_premium">Premium check failed. Please try again.</string>
+</resources>
