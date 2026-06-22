@@ -188,9 +188,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun proxyToJson(proxy: ProxyServer): String =
-        kotlinx.serialization.json.Json.encodeToString(
-            kotlinx.serialization.serializer<ProxyServer>(), proxy
-        )
+        com.google.gson.Gson().toJson(proxy)
 
     override fun onCleared() {
         super.onCleared()

@@ -56,8 +56,8 @@ class TeleFlowVpnService : VpnService() {
             ACTION_CONNECT -> {
                 val proxyJson = intent.getStringExtra(EXTRA_PROXY)
                 if (proxyJson != null) {
-                    val proxy = kotlinx.serialization.json.Json
-                        .decodeFromString<ProxyServer>(proxyJson)
+                    val proxy = com.google.gson.Gson()
+                        .fromJson(proxyJson, ProxyServer::class.java)
                     val user = intent.getStringExtra(EXTRA_SOCKS_USER) ?: ""
                     val pass = intent.getStringExtra(EXTRA_SOCKS_PASS) ?: ""
                     connect(proxy, user, pass)
@@ -132,8 +132,8 @@ class TeleFlowVpnService : VpnService() {
         socksUser: String,
         socksPass: String
     ) = withContext(Dispatchers.IO) {
-        val tunIn = ParcelFileDescriptor.AutoCloseInputStream(tun)
-        val tunOut = ParcelFileDescriptor.AutoCloseOutputStream(tun)
+        val tunIn = java.io.FileInputStream(tun.fileDescriptor)
+        val tunOut = java.io.FileOutputStream(tun.fileDescriptor)
 
         val sock = createTlsSocket(proxy.ip, proxy.port)
         proxySocket = sock
