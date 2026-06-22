@@ -1,22 +1,13 @@
 package com.teleflow.data.api
 
 import com.teleflow.BuildConfig
-import kotlinx.serialization.json.Json
-import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import com.jakewharton.retrofit.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = false
-        encodeDefaults = true
-        coerceInputValues = true
-    }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = if (BuildConfig.DEBUG) {
@@ -43,7 +34,7 @@ object ApiClient {
     private val retrofit = Retrofit.Builder()
         .baseUrl(BuildConfig.API_BASE_URL)
         .client(httpClient)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+        .addConverterFactory(GsonConverterFactory.create())
         .build()
 
     val api: TeleFlowApi = retrofit.create(TeleFlowApi::class.java)

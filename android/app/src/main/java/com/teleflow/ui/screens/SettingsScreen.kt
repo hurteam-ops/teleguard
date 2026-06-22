@@ -70,8 +70,8 @@ fun SettingsScreen(
                 Spacer(Modifier.height(32.dp))
                 OutlinedButton(
                     onClick = { vm.logout(); onBack() },
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(48.dp),
-                    RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Red)
                 ) {
                     Icon(Icons.Filled.Logout, null, Modifier.size(18.dp))

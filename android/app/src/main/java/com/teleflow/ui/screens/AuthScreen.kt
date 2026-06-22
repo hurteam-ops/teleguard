@@ -99,8 +99,8 @@ fun AuthScreen(
                                 Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/${BuildConfig.TG_BOT_USERNAME}?start=auth"))
                             )
                         },
-                        Modifier.fillMaxWidth().height(52.dp),
-                        RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = TeleBlue),
                         enabled = !loading
                     ) {
@@ -116,7 +116,8 @@ fun AuthScreen(
                     Spacer(Modifier.height(20.dp))
 
                     Card(
-                        RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)
                     ) {
                         Column(Modifier.padding(18.dp)) {

@@ -87,14 +87,14 @@ fun MainScreen(
                 Text("TeleFlow", fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 Spacer(Modifier.weight(1f))
                 if (premium) {
-                    Surface(RoundedCornerShape(6.dp), color = Gold.copy(alpha = 0.12f)) {
+                    Surface(shape = RoundedCornerShape(6.dp), color = Gold.copy(alpha = 0.12f)) {
                         Row(
                             Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Filled.Bolt, null, Modifier.size(13.dp), Gold)
                             Spacer(Modifier.width(3.dp))
-                            Text("PRO", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, Gold)
+                            Text("PRO", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = Gold)
                         }
                     }
                 }
@@ -203,7 +203,7 @@ fun MainScreen(
                                 ConnectionState.ERROR         -> "RETRY"
                                 ConnectionState.DISCONNECTED  -> "CONNECT"
                             },
-                            Color.White,
+                            color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
                             fontSize = 12.sp,
                             letterSpacing = 2.5.sp
@@ -265,9 +265,9 @@ private fun TabIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label
 
 @Composable
 private fun AuthPrompt(onTap: () -> Unit, mod: Modifier = Modifier) {
-    Card(mod.fillMaxWidth(), RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)) {
+    Card(modifier = mod.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)) {
         Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Surface(Modifier.size(56.dp), CircleShape, TeleBlue.copy(alpha = 0.1f)) {
+            Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = TeleBlue.copy(alpha = 0.1f)) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(Icons.Outlined.Lock, null, Modifier.size(26.dp), TeleBlue)
                 }
@@ -281,9 +281,9 @@ private fun AuthPrompt(onTap: () -> Unit, mod: Modifier = Modifier) {
             )
             Spacer(Modifier.height(18.dp))
             Button(
-                onTap,
-                Modifier.fillMaxWidth().height(48.dp),
-                RoundedCornerShape(12.dp),
+                onClick = onTap,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = TeleBlue)
             ) {
                 Text("Continue with Telegram", fontWeight = FontWeight.SemiBold)
@@ -302,7 +302,8 @@ private fun InfoSection(
 ) {
     Column(mod.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Card(
-            RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
             colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
@@ -324,7 +325,8 @@ private fun InfoSection(
         }
 
         Card(
-            RoundedCornerShape(14.dp),
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(14.dp),
             colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(0.dp)
         ) {
@@ -339,11 +341,13 @@ private fun InfoSection(
                     Text("SOCKS5 / Proxy", fontWeight = FontWeight.Medium, fontSize = 15.sp)
                 }
                 if (state == ConnectionState.CONNECTED) {
-                    Surface(RoundedCornerShape(6.dp), Green.copy(alpha = 0.12f)) {
+                    Surface(shape = RoundedCornerShape(6.dp), color = Green.copy(alpha = 0.12f)) {
                         Text(
-                            "Active",
-                            Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            fontSize = 12.sp, fontWeight = FontWeight.SemiBold, Green
+                            text = "Active",
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Green
                         )
                     }
                 }
@@ -352,7 +356,8 @@ private fun InfoSection(
 
         if (!premium) {
             Card(
-                RoundedCornerShape(14.dp),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(Gold.copy(alpha = 0.08f)),
                 elevation = CardDefaults.cardElevation(0.dp)
             ) {

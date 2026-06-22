@@ -31,7 +31,7 @@ class SecureStorage private constructor(context: Context) {
         get() = prefs.getLong(KEY_TOKEN_EXPIRES, 0L)
         set(value) = prefs.edit().putLong(KEY_TOKEN_EXPIRES, value).apply()
 
-    var isAuthenticated: Boolean
+    val isAuthenticated: Boolean
         get() = authToken.isNotBlank() && tokenExpiresAt > System.currentTimeMillis()
 
     var userId: Long
