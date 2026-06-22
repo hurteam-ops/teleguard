@@ -17,7 +17,7 @@ android {
 
         // Backend API URL — override via build config
         buildConfigField("String", "API_BASE_URL", "\"https://api.teleflow.dev\"")
-        buildConfigField("String", "TG_BOT_USERNAME", "\"TeleFlowBot\"")
+        buildConfigField("String", "TG_BOT_USERNAME", "\"Televflowvpnbot\"")
     }
 
     buildTypes {
