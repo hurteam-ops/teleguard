@@ -81,7 +81,6 @@ class TeleFlowVpnService : VpnService() {
             updateNotification("Connecting")
 
             val tun = Builder()
-                .setName("teleflow")
                 .setMtu(MTU)
                 .addAddress("10.88.0.2", 24)
                 .addRoute("0.0.0.0", 0)
@@ -133,8 +132,8 @@ class TeleFlowVpnService : VpnService() {
         socksUser: String,
         socksPass: String
     ) = withContext(Dispatchers.IO) {
-        val tunIn = tun.fileDescriptor.inputStream()
-        val tunOut = tun.fileDescriptor.outputStream()
+        val tunIn = ParcelFileDescriptor.AutoCloseInputStream(tun)
+        val tunOut = ParcelFileDescriptor.AutoCloseOutputStream(tun)
 
         val sock = createTlsSocket(proxy.ip, proxy.port)
         proxySocket = sock

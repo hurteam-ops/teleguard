@@ -97,7 +97,7 @@ private fun GroupLabel(text: String) {
 
 @Composable
 private fun DividerRow() {
-    HorizontalDivider(
+    Divider(
         modifier = Modifier.padding(start = 56.dp, end = 20.dp),
         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     )
