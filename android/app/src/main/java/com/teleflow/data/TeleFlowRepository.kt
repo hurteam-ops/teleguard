@@ -72,9 +72,39 @@ class TeleFlowRepository(private val secureStorage: SecureStorage) {
     fun getAuthToken(): String = secureStorage.authToken
     fun isAuthenticated(): Boolean = secureStorage.isAuthenticated
     fun isPremium(): Boolean = secureStorage.isPremium
+    fun getUsername(): String = secureStorage.username
     fun getSelectedProxyId(): String = secureStorage.selectedProxyId
     fun setSelectedProxyId(id: String) { secureStorage.selectedProxyId = id }
+
     fun isKillSwitchEnabled(): Boolean = secureStorage.killSwitchEnabled
     fun setKillSwitchEnabled(enabled: Boolean) { secureStorage.killSwitchEnabled = enabled }
+
+    fun isAutoConnectEnabled(): Boolean = secureStorage.autoConnectEnabled
+    fun setAutoConnectEnabled(enabled: Boolean) { secureStorage.autoConnectEnabled = enabled }
+
+    fun getDnsServer(): String = secureStorage.dnsServer
+    fun setDnsServer(dns: String) { secureStorage.dnsServer = dns }
+
+    fun getThemePreference(): String = secureStorage.themePreference
+    fun setThemePreference(theme: String) { secureStorage.themePreference = theme }
+
+    fun getProtocol(): String = secureStorage.protocol
+    fun setProtocol(p: String) { secureStorage.protocol = p }
+
+    fun isIpv6ProtectionEnabled(): Boolean = secureStorage.ipv6LeakProtection
+    fun setIpv6ProtectionEnabled(enabled: Boolean) { secureStorage.ipv6LeakProtection = enabled }
+
+    fun isConnectionAlertsEnabled(): Boolean = secureStorage.connectionAlerts
+    fun setConnectionAlertsEnabled(enabled: Boolean) { secureStorage.connectionAlerts = enabled }
+
+    fun getTotalSessionTime(): Long = secureStorage.totalSessionTime
+    fun addSessionTime(ms: Long) { secureStorage.totalSessionTime = secureStorage.totalSessionTime + ms }
+
+    fun getTotalDataDown(): Long = secureStorage.totalDataDown
+    fun addDataDown(bytes: Long) { secureStorage.totalDataDown = secureStorage.totalDataDown + bytes }
+
+    fun getTotalDataUp(): Long = secureStorage.totalDataUp
+    fun addDataUp(bytes: Long) { secureStorage.totalDataUp = secureStorage.totalDataUp + bytes }
+
     fun logout() { secureStorage.clear() }
 }

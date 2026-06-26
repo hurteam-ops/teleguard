@@ -38,6 +38,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _bytesUp = MutableStateFlow(0L)
     val bytesUp: StateFlow<Long> = _bytesUp.asStateFlow()
 
+    private val _speedDown = MutableStateFlow(0L)
+    val speedDown: StateFlow<Long> = _speedDown.asStateFlow()
+
+    private val _speedUp = MutableStateFlow(0L)
+    val speedUp: StateFlow<Long> = _speedUp.asStateFlow()
+
+    private val _myIp = MutableStateFlow("")
+    val myIp: StateFlow<String> = _myIp.asStateFlow()
+
+    private val _selectedProxyName = MutableStateFlow("Automatic")
+    val selectedProxyName: StateFlow<String> = _selectedProxyName.asStateFlow()
+
     private val _proxies = MutableStateFlow<List<ProxyServer>>(emptyList())
     val proxies: StateFlow<List<ProxyServer>> = _proxies.asStateFlow()
 
@@ -56,8 +68,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val _totalSessionTime = MutableStateFlow(0L)
+    val totalSessionTime: StateFlow<Long> = _totalSessionTime.asStateFlow()
+
+    private val _totalDataDown = MutableStateFlow(0L)
+    val totalDataDown: StateFlow<Long> = _totalDataDown.asStateFlow()
+
+    private val _totalDataUp = MutableStateFlow(0L)
+    val totalDataUp: StateFlow<Long> = _totalDataUp.asStateFlow()
+
     private var timerJob: Job? = null
     private var connectedAtMs: Long = 0L
+    private var lastBytesDown: Long = 0L
+    private var lastBytesUp: Long = 0L
 
     private val vpnStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context, intent: Intent) {
@@ -65,14 +88,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             when (state) {
                 TeleFlowVpnService.STATE_CONNECTED -> {
                     _connectionState.value = ConnectionState.CONNECTED
+                    _myIp.value = generateProxyIp()
                     startTimer()
                 }
                 TeleFlowVpnService.STATE_DISCONNECTED -> {
+                    if (_connectionState.value == ConnectionState.CONNECTED) {
+                        val sessionMs = System.currentTimeMillis() - connectedAtMs
+                        repository.addSessionTime(sessionMs)
+                        repository.addDataDown(_bytesDown.value)
+                        repository.addDataUp(_bytesUp.value)
+                        _totalSessionTime.value = repository.getTotalSessionTime()
+                        _totalDataDown.value = repository.getTotalDataDown()
+                        _totalDataUp.value = repository.getTotalDataUp()
+                    }
                     _connectionState.value = ConnectionState.DISCONNECTED
                     stopTimer()
                     _connectionDuration.value = "00:00:00"
                     _bytesDown.value = 0
                     _bytesUp.value = 0
+                    _speedDown.value = 0
+                    _speedUp.value = 0
+                    _myIp.value = ""
                 }
                 TeleFlowVpnService.STATE_ERROR -> {
                     _connectionState.value = ConnectionState.ERROR
@@ -83,22 +119,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     init {
-        _isAuthenticated.value = repository.isAuthenticated()
-        _isPremium.value = repository.isPremium()
-        _selectedProxyId.value = repository.getSelectedProxyId()
+        try {
+            _isAuthenticated.value = repository.isAuthenticated()
+            _isPremium.value = repository.isPremium()
+            _selectedProxyId.value = repository.getSelectedProxyId()
+            updateProxyName()
+            _totalSessionTime.value = repository.getTotalSessionTime()
+            _totalDataDown.value = repository.getTotalDataDown()
+            _totalDataUp.value = repository.getTotalDataUp()
 
-        LocalBroadcastManager.getInstance(application).registerReceiver(
-            vpnStateReceiver,
-            IntentFilter(TeleFlowVpnService.ACTION_STATE_CHANGED)
-        )
+            LocalBroadcastManager.getInstance(application).registerReceiver(
+                vpnStateReceiver,
+                IntentFilter(TeleFlowVpnService.ACTION_STATE_CHANGED)
+            )
 
-        if (_isAuthenticated.value) {
-            loadProxies()
-        }
+            if (_isAuthenticated.value) {
+                loadProxies()
+            }
+        } catch (_: Exception) { }
     }
 
     fun connect() {
-        if (_connectionState.value != ConnectionState.DISCONNECTED) return
+        if (_connectionState.value != ConnectionState.DISCONNECTED &&
+            _connectionState.value != ConnectionState.ERROR) return
 
         _connectionState.value = ConnectionState.CONNECTING
 
@@ -119,6 +162,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun disconnect() {
+        if (_connectionState.value == ConnectionState.DISCONNECTED) return
         _connectionState.value = ConnectionState.DISCONNECTING
 
         val context = getApplication<Application>()
@@ -131,6 +175,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun selectProxy(id: String) {
         _selectedProxyId.value = id
         repository.setSelectedProxyId(id)
+        updateProxyName()
+    }
+
+    private fun updateProxyName() {
+        val id = _selectedProxyId.value
+        _selectedProxyName.value = if (id == "auto") {
+            "Automatic (Fastest)"
+        } else {
+            val proxy = _proxies.value.find { it.ip == id }
+            if (proxy != null) {
+                val parts = mutableListOf<String>()
+                if (proxy.country.isNotBlank()) parts.add(proxy.country)
+                if (proxy.city.isNotBlank()) parts.add(proxy.city)
+                if (parts.isEmpty()) proxy.ip else parts.joinToString(" · ")
+            } else {
+                id
+            }
+        }
     }
 
     fun authenticate(request: AuthRequest) {
@@ -155,18 +217,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _isAuthenticated.value = false
         _isPremium.value = false
         _proxies.value = emptyList()
+        _selectedProxyId.value = "auto"
+        _selectedProxyName.value = "Automatic"
     }
 
     fun clearError() { _error.value = null }
 
     private fun loadProxies() {
         viewModelScope.launch {
-            repository.getProxies().onSuccess { _proxies.value = it }
+            repository.getProxies().onSuccess {
+                _proxies.value = it
+                updateProxyName()
+            }
         }
     }
 
     private fun startTimer() {
         connectedAtMs = System.currentTimeMillis()
+        lastBytesDown = 0
+        lastBytesUp = 0
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
             while (true) {
@@ -176,8 +245,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _connectionDuration.value = "%02d:%02d:%02d".format(
                     secs / 3600, (secs % 3600) / 60, secs % 60
                 )
-                _bytesDown.value += (500..2000).random()
-                _bytesUp.value += (100..800).random()
+
+                val newDown = (800L..3200L).random()
+                val newUp = (150L..1200L).random()
+                _bytesDown.value += newDown
+                _bytesUp.value += newUp
+                _speedDown.value = newDown
+                _speedUp.value = newUp
+                lastBytesDown = newDown
+                lastBytesUp = newUp
             }
         }
     }
@@ -187,12 +263,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         timerJob = null
     }
 
+    private fun generateProxyIp(): String {
+        val id = _selectedProxyId.value
+        if (id == "auto") {
+            return "185.%d.%d.%d".format(
+                (10..220).random(),
+                (0..255).random(),
+                (1..254).random()
+            )
+        }
+        return id
+    }
+
     private fun proxyToJson(proxy: ProxyServer): String =
         com.google.gson.Gson().toJson(proxy)
 
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
-        LocalBroadcastManager.getInstance(getApplication()).unregisterReceiver(vpnStateReceiver)
+        try {
+            LocalBroadcastManager.getInstance(getApplication()).unregisterReceiver(vpnStateReceiver)
+        } catch (_: Exception) { }
     }
 }

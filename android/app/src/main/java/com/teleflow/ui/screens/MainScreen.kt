@@ -18,10 +18,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,217 +33,188 @@ import com.teleflow.viewmodel.MainViewModel
 fun MainScreen(
     vm: MainViewModel,
     onAuth: () -> Unit,
-    onCountries: () -> Unit,
-    onSettings: () -> Unit
+    onCountries: () -> Unit
 ) {
-    val state       by vm.connectionState.collectAsState()
-    val authed      by vm.isAuthenticated.collectAsState()
-    val premium     by vm.isPremium.collectAsState()
-    val proxyId     by vm.selectedProxyId.collectAsState()
-    val duration    by vm.connectionDuration.collectAsState()
-    val down        by vm.bytesDown.collectAsState()
-    val up          by vm.bytesUp.collectAsState()
-    val error       by vm.error.collectAsState()
+    val state    by vm.connectionState.collectAsState()
+    val authed   by vm.isAuthenticated.collectAsState()
+    val premium  by vm.isPremium.collectAsState()
+    val proxyName by vm.selectedProxyName.collectAsState()
+    val duration by vm.connectionDuration.collectAsState()
+    val down     by vm.bytesDown.collectAsState()
+    val up       by vm.bytesUp.collectAsState()
+    val speedDown by vm.speedDown.collectAsState()
+    val speedUp   by vm.speedUp.collectAsState()
+    val myIp     by vm.myIp.collectAsState()
+    val error    by vm.error.collectAsState()
 
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val btnScale by animateFloatAsState(
-        if (pressed) 0.90f else 1f,
+        if (pressed) 0.92f else 1f,
         spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium),
         label = "scale"
     )
 
     val inf = rememberInfiniteTransition("loop")
 
-    val ring1Alpha by inf.animateFloat(0.55f, 0f, infiniteRepeatable(tween(1400, easing = EaseOutSine), RepeatMode.Restart), label = "")
-    val ring1Scale by inf.animateFloat(1.0f, 1.7f, infiniteRepeatable(tween(1400, easing = EaseOutCubic), RepeatMode.Restart), label = "")
+    val ring1A by inf.animateFloat(0.50f, 0f, infiniteRepeatable(tween(1600, easing = EaseOutSine), RepeatMode.Restart), label = "r1a")
+    val ring1S by inf.animateFloat(1.0f, 1.65f, infiniteRepeatable(tween(1600, easing = EaseOutCubic), RepeatMode.Restart), label = "r1s")
 
-    val ring2Alpha by inf.animateFloat(0.45f, 0f, infiniteRepeatable(tween(1400, 350, EaseOutSine), RepeatMode.Restart), label = "")
-    val ring2Scale by inf.animateFloat(1.0f, 1.55f, infiniteRepeatable(tween(1400, 350, EaseOutCubic), RepeatMode.Restart), label = "")
+    val ring2A by inf.animateFloat(0.38f, 0f, infiniteRepeatable(tween(1600, 400, EaseOutSine), RepeatMode.Restart), label = "r2a")
+    val ring2S by inf.animateFloat(1.0f, 1.45f, infiniteRepeatable(tween(1600, 400, EaseOutCubic), RepeatMode.Restart), label = "r2s")
 
-    val ring3Alpha by inf.animateFloat(0.35f, 0f, infiniteRepeatable(tween(1400, 700, EaseOutSine), RepeatMode.Restart), label = "")
-    val ring3Scale by inf.animateFloat(1.0f, 1.4f, infiniteRepeatable(tween(1400, 700, EaseOutCubic), RepeatMode.Restart), label = "")
-
-    val rot by inf.animateFloat(0f, 360f, infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Restart), label = "")
+    val rot by inf.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Restart), label = "rot")
 
     val targetCol = when (state) {
-        ConnectionState.CONNECTED     -> Green
+        ConnectionState.CONNECTED      -> Green
         ConnectionState.CONNECTING,
         ConnectionState.DISCONNECTING -> Amber
         ConnectionState.ERROR         -> Red
         ConnectionState.DISCONNECTED  -> TeleBlue
     }
-    val btnColor by animateColorAsState(targetCol, tween(350), label = "col")
+    val btnColor by animateColorAsState(targetCol, tween(400), label = "col")
 
-    Scaffold(containerColor = MaterialTheme.colorScheme.background) { pad ->
-        Column(
-            Modifier.fillMaxSize().padding(pad),
-            horizontalAlignment = Alignment.CenterHorizontally
+    val pulseAlpha by inf.animateFloat(
+        0.4f, 1f,
+        infiniteRepeatable(tween(800, easing = LinearEasing), RepeatMode.Reverse),
+        label = "pulse"
+    )
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                Modifier.size(28.dp).clip(RoundedCornerShape(8.dp)).background(TeleBlue),
+                contentAlignment = Alignment.Center
             ) {
-                Text("TeleFlow", fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                Spacer(Modifier.weight(1f))
-                if (premium) {
-                    Surface(shape = RoundedCornerShape(6.dp), color = Gold.copy(alpha = 0.12f)) {
-                        Row(
-                            Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Filled.Bolt, null, Modifier.size(13.dp), Gold)
-                            Spacer(Modifier.width(3.dp))
-                            Text("PRO", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = Gold)
-                        }
+                Icon(Icons.Filled.Shield, null, Modifier.size(18.dp), Color.White)
+            }
+            Spacer(Modifier.width(10.dp))
+            Text("TeleFlow", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Spacer(Modifier.weight(1f))
+            if (premium) {
+                Surface(shape = RoundedCornerShape(6.dp), color = Gold.copy(alpha = 0.14f)) {
+                    Row(
+                        Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.Bolt, null, Modifier.size(13.dp), Gold)
+                        Spacer(Modifier.width(3.dp))
+                        Text("PRO", fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, color = Gold)
                     }
                 }
             }
+        }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                AnimatedContent(
-                    state,
-                    transitionSpec = {
-                        fadeIn(tween(180)) + slideInVertically(tween(180)) { h -> h / 3 } togetherWith
-                        fadeOut(tween(120)) + slideOutVertically(tween(120)) { h -> -h / 3 }
-                    },
-                    label = "status"
-                ) { s ->
-                    Text(
-                        when (s) {
-                            ConnectionState.CONNECTED     -> "Connected"
-                            ConnectionState.CONNECTING    -> "Connecting…"
-                            ConnectionState.DISCONNECTING -> "Disconnecting…"
-                            ConnectionState.ERROR         -> "Connection failed"
-                            ConnectionState.DISCONNECTED  -> "Not connected"
-                        },
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 20.sp,
-                        color = when (s) {
-                            ConnectionState.CONNECTED  -> Green
-                            ConnectionState.CONNECTING -> Amber
-                            ConnectionState.ERROR      -> Red
-                            else -> MaterialTheme.colorScheme.onBackground
+        Spacer(Modifier.height(12.dp))
+
+        ConnectionCard(
+            state = state,
+            duration = duration,
+            myIp = myIp,
+            speedDown = speedDown,
+            speedUp = speedUp,
+            pulseAlpha = pulseAlpha
+        )
+
+        Spacer(Modifier.weight(1f))
+
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(220.dp)) {
+            if (state == ConnectionState.CONNECTING || state == ConnectionState.DISCONNECTING) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val r = size.minDimension / 2f
+                    drawCircle(SolidColor(btnColor), r * ring1S, alpha = ring1A)
+                    drawCircle(SolidColor(btnColor), r * ring2S, alpha = ring2A)
+                }
+            }
+            if (state == ConnectionState.CONNECTED) {
+                Canvas(Modifier.fillMaxSize()) {
+                    val r = size.minDimension / 2f
+                    drawCircle(SolidColor(Green), r * 1.15f, alpha = 0.06f)
+                }
+            }
+
+            Box(
+                Modifier
+                    .size(168.dp)
+                    .graphicsLayer {
+                        scaleX = btnScale; scaleY = btnScale
+                        shadowElevation = if (state == ConnectionState.CONNECTED) 8f else 28f
+                        shape = CircleShape
+                        clip = true
+                    }
+                    .clip(CircleShape)
+                    .background(btnColor)
+                    .clickable(source, indication = null, enabled = authed) {
+                        when (state) {
+                            ConnectionState.DISCONNECTED,
+                            ConnectionState.ERROR     -> vm.connect()
+                            ConnectionState.CONNECTED -> vm.disconnect()
+                            else -> {}
                         }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        when (state) {
+                            ConnectionState.CONNECTED      -> Icons.Filled.Shield
+                            ConnectionState.CONNECTING     -> Icons.Filled.Sync
+                            ConnectionState.DISCONNECTING   -> Icons.Filled.PowerSettingsNew
+                            ConnectionState.ERROR           -> Icons.Filled.Refresh
+                            ConnectionState.DISCONNECTED    -> Icons.Filled.PowerSettingsNew
+                        },
+                        null,
+                        Modifier
+                            .size(44.dp)
+                            .then(
+                                if (state == ConnectionState.CONNECTING)
+                                    Modifier.graphicsLayer { rotationZ = rot }
+                                else Modifier
+                            ),
+                        Color.White
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        when (state) {
+                            ConnectionState.CONNECTED      -> "DISCONNECT"
+                            ConnectionState.CONNECTING      -> "CANCEL"
+                            ConnectionState.DISCONNECTING   -> "STOPPING"
+                            ConnectionState.ERROR           -> "RETRY"
+                            ConnectionState.DISCONNECTED    -> "CONNECT"
+                        },
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.5.sp
                     )
                 }
-
-                AnimatedVisibility(visible = state == ConnectionState.CONNECTED) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(duration, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            "\u2193 ${fmt(down)}  \u2191 ${fmt(up)}",
-                            fontSize = 13.sp,
-                            color = TextSecondary
-                        )
-                    }
-                }
             }
-
-            Spacer(Modifier.weight(1f))
-
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(240.dp)) {
-                if (state == ConnectionState.CONNECTING) {
-                    Canvas(Modifier.fillMaxSize()) {
-                        val r = size.minDimension / 2f
-                        drawCircle(SolidColor(btnColor), r * ring1Scale, alpha = ring1Alpha)
-                        drawCircle(SolidColor(btnColor), r * ring2Scale, alpha = ring2Alpha)
-                        drawCircle(SolidColor(btnColor), r * ring3Scale, alpha = ring3Alpha)
-                    }
-                }
-
-                Box(
-                    Modifier
-                        .size(200.dp)
-                        .graphicsLayer {
-                            scaleX = btnScale; scaleY = btnScale
-                            shadowElevation = if (state == ConnectionState.CONNECTED) 0f else 24f
-                            shape = CircleShape
-                            clip = true
-                        }
-                        .clip(CircleShape)
-                        .background(btnColor)
-                        .clickable(source, indication = null, enabled = authed) {
-                            when (state) {
-                                ConnectionState.DISCONNECTED,
-                                ConnectionState.ERROR         -> vm.connect()
-                                ConnectionState.CONNECTED     -> vm.disconnect()
-                                else -> {}
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            when (state) {
-                                ConnectionState.CONNECTED     -> Icons.Filled.Shield
-                                ConnectionState.CONNECTING    -> Icons.Filled.Sync
-                                ConnectionState.DISCONNECTING -> Icons.Filled.PowerSettingsNew
-                                ConnectionState.ERROR         -> Icons.Filled.Refresh
-                                ConnectionState.DISCONNECTED  -> Icons.Filled.PowerSettingsNew
-                            },
-                            null,
-                            Modifier
-                                .size(52.dp)
-                                .then(
-                                    if (state == ConnectionState.CONNECTING)
-                                        Modifier.graphicsLayer { rotationZ = rot }
-                                    else Modifier
-                                ),
-                            Color.White
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            when (state) {
-                                ConnectionState.CONNECTED     -> "STOP"
-                                ConnectionState.CONNECTING    -> "CONNECTING"
-                                ConnectionState.DISCONNECTING -> "STOPPING"
-                                ConnectionState.ERROR         -> "RETRY"
-                                ConnectionState.DISCONNECTED  -> "CONNECT"
-                            },
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 12.sp,
-                            letterSpacing = 2.5.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            AnimatedContent(
-                authed,
-                transitionSpec = {
-                    fadeIn(tween(250)) + slideInVertically(tween(250)) { it / 4 } togetherWith
-                    fadeOut(tween(180))
-                },
-                label = "bottom"
-            ) { logged ->
-                if (!logged) AuthPrompt(onAuth, Modifier.padding(horizontal = 20.dp))
-                else InfoSection(state, premium, proxyId, onCountries, Modifier.padding(horizontal = 20.dp))
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            Row(
-                Modifier
-                    .padding(horizontal = 20.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                TabIcon(Icons.Filled.Home, "Home", selected = true)
-                TabIcon(Icons.Outlined.Person, "Profile", onClick = onAuth)
-                TabIcon(Icons.Outlined.Settings, "Settings", onClick = onSettings)
-            }
-
-            Spacer(Modifier.height(8.dp))
         }
+
+        Spacer(Modifier.height(28.dp))
+
+        LocationCard(proxyName = proxyName, state = state, onCountries = onCountries)
+
+        if (!authed) {
+            Spacer(Modifier.height(10.dp))
+            AuthPrompt(onAuth)
+        }
+
+        if (!premium && authed) {
+            Spacer(Modifier.height(10.dp))
+            UpgradeCard()
+        }
+
+        Spacer(Modifier.height(20.dp))
     }
 
     error?.let {
@@ -257,32 +228,171 @@ fun MainScreen(
 }
 
 @Composable
-private fun TabIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, selected: Boolean = false, onClick: () -> Unit = {}) {
-    IconButton(onClick = onClick) {
-        Icon(icon, label, tint = if (selected) TeleBlue else TextSecondary, modifier = Modifier.size(24.dp))
+private fun ConnectionCard(
+    state: ConnectionState,
+    duration: String,
+    myIp: String,
+    speedDown: Long,
+    speedUp: Long,
+    pulseAlpha: Float
+) {
+    val statusColor = when (state) {
+        ConnectionState.CONNECTED  -> Green
+        ConnectionState.CONNECTING -> Amber
+        ConnectionState.ERROR      -> Red
+        else                        -> TextSecondary
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(1.dp)
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(10.dp).clip(CircleShape).background(statusColor)
+                        .then(
+                            if (state == ConnectionState.CONNECTING || state == ConnectionState.CONNECTED)
+                                Modifier.graphicsLayer { alpha = pulseAlpha }
+                            else Modifier
+                        )
+                )
+                Spacer(Modifier.width(8.dp))
+                AnimatedContent(
+                    state,
+                    transitionSpec = {
+                        fadeIn(tween(200)) + slideInVertically(tween(200)) { it / 4 } togetherWith
+                        fadeOut(tween(150)) + slideOutVertically(tween(150)) { -it / 4 }
+                    },
+                    label = "status"
+                ) { s ->
+                    Text(
+                        when (s) {
+                            ConnectionState.CONNECTED      -> "Connected"
+                            ConnectionState.CONNECTING     -> "Connecting…"
+                            ConnectionState.DISCONNECTING  -> "Disconnecting…"
+                            ConnectionState.ERROR          -> "Connection failed"
+                            ConnectionState.DISCONNECTED   -> "Not connected"
+                        },
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp,
+                        color = statusColor
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            AnimatedContent(
+                targetState = state == ConnectionState.CONNECTED && myIp.isNotEmpty(),
+                transitionSpec = {
+                    fadeIn(tween(200)) + expandVertically(tween(200)) togetherWith
+                    fadeOut(tween(150)) + shrinkVertically(tween(150))
+                },
+                label = "ip"
+            ) { showIp ->
+                if (showIp) {
+                    Text(
+                        myIp,
+                        fontSize = 13.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = TextSecondary
+                    )
+                    Spacer(Modifier.height(10.dp))
+                } else {
+                    Spacer(Modifier.height(4.dp))
+                }
+            }
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                StatColumn("Time", duration, Icons.Outlined.Schedule)
+                VerticalDivider()
+                StatColumn("Download", "${fmtSpeed(speedDown)}/s", Icons.Outlined.FileDownload)
+                VerticalDivider()
+                StatColumn("Upload", "${fmtSpeed(speedUp)}/s", Icons.Outlined.FileUpload)
+            }
+        }
     }
 }
 
 @Composable
-private fun AuthPrompt(onTap: () -> Unit, mod: Modifier = Modifier) {
-    Card(modifier = mod.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface)) {
-        Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = TeleBlue.copy(alpha = 0.1f)) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.Outlined.Lock, null, Modifier.size(26.dp), TeleBlue)
-                }
+private fun StatColumn(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, Modifier.size(13.dp), TextSecondary)
+            Spacer(Modifier.width(4.dp))
+            Text(label, fontSize = 11.sp, color = TextSecondary, fontWeight = FontWeight.Medium)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(value, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun VerticalDivider() {
+    Box(
+        Modifier
+            .width(1.dp)
+            .height(36.dp)
+            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+    )
+}
+
+@Composable
+private fun LocationCard(proxyName: String, state: ConnectionState, onCountries: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onCountries),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier.size(40.dp).clip(RoundedCornerShape(12.dp))
+                    .background(TeleBlue.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(Icons.Outlined.Public, null, Modifier.size(20.dp), TeleBlue)
             }
-            Spacer(Modifier.height(14.dp))
-            Text("Sign in with Telegram", fontWeight = FontWeight.SemiBold, fontSize = 17.sp)
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Location", fontSize = 12.sp, color = TextSecondary)
+                Text(proxyName, fontWeight = FontWeight.Medium, fontSize = 15.sp)
+            }
+            Icon(Icons.Filled.ChevronRight, null, Modifier.size(20.dp), TextSecondary.copy(alpha = 0.4f))
+        }
+    }
+}
+
+@Composable
+private fun AuthPrompt(onTap: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(TeleBlue.copy(alpha = 0.06f)),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Outlined.Lock, null, Modifier.size(28.dp), TeleBlue)
+            Spacer(Modifier.height(10.dp))
+            Text("Sign in required", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
             Spacer(Modifier.height(4.dp))
-            Text(
-                "Your Telegram account is your key to TeleFlow",
-                fontSize = 14.sp, color = TextSecondary
-            )
-            Spacer(Modifier.height(18.dp))
+            Text("Authenticate with Telegram to connect", fontSize = 13.sp, color = TextSecondary)
+            Spacer(Modifier.height(14.dp))
             Button(
                 onClick = onTap,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(46.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = TeleBlue)
             ) {
@@ -293,94 +403,30 @@ private fun AuthPrompt(onTap: () -> Unit, mod: Modifier = Modifier) {
 }
 
 @Composable
-private fun InfoSection(
-    state: ConnectionState,
-    premium: Boolean,
-    proxyId: String,
-    onCountries: () -> Unit,
-    mod: Modifier = Modifier
-) {
-    Column(mod.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(0.dp)
+private fun UpgradeCard() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(Gold.copy(alpha = 0.08f)),
+        elevation = CardDefaults.cardElevation(0.dp)
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                Modifier.fillMaxWidth().clickable(onClick = onCountries).padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Outlined.Public, null, Modifier.size(22.dp), TextSecondary)
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Location", fontSize = 12.sp, color = TextSecondary)
-                    Text(
-                        if (proxyId == "auto") "Automatic (Fastest)" else proxyId,
-                        fontWeight = FontWeight.Medium, fontSize = 15.sp
-                    )
-                }
-                Text("Change", color = TeleBlue, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Icon(Icons.Filled.Bolt, null, Modifier.size(22.dp), Gold)
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Unlock all locations", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                Text("Requires Telegram Premium", fontSize = 12.sp, color = TextSecondary)
             }
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(0.dp)
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Outlined.Speed, null, Modifier.size(22.dp), TextSecondary)
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Protocol", fontSize = 12.sp, color = TextSecondary)
-                    Text("SOCKS5 / Proxy", fontWeight = FontWeight.Medium, fontSize = 15.sp)
-                }
-                if (state == ConnectionState.CONNECTED) {
-                    Surface(shape = RoundedCornerShape(6.dp), color = Green.copy(alpha = 0.12f)) {
-                        Text(
-                            text = "Active",
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Green
-                        )
-                    }
-                }
-            }
-        }
-
-        if (!premium) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(Gold.copy(alpha = 0.08f)),
-                elevation = CardDefaults.cardElevation(0.dp)
-            ) {
-                Row(
-                    Modifier.fillMaxWidth().padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Filled.Bolt, null, Modifier.size(22.dp), Gold)
-                    Spacer(Modifier.width(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Unlock all locations", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                        Text("Requires Telegram Premium", fontSize = 13.sp, color = TextSecondary)
-                    }
-                    Icon(Icons.Filled.ChevronRight, null, Modifier.size(18.dp), TextSecondary)
-                }
-            }
+            Icon(Icons.Filled.ChevronRight, null, Modifier.size(18.dp), TextSecondary.copy(alpha = 0.4f))
         }
     }
 }
 
-private fun fmt(bytes: Long): String = when {
+private fun fmtSpeed(bytes: Long): String = when {
     bytes < 1024          -> "${bytes} B"
-    bytes < 1048576       -> "${bytes / 1024} KB"
-    bytes < 1073741824    -> "${"%.1f".format(bytes / 1048576.0)} MB"
-    else                  -> "${"%.2f".format(bytes / 1073741824.0)} GB"
+    bytes < 1048576       -> "${"%.1f".format(bytes / 1024.0)} KB"
+    else                  -> "${"%.1f".format(bytes / 1048576.0)} MB"
 }

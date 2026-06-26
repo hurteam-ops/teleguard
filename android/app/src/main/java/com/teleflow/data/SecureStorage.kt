@@ -62,8 +62,46 @@ class SecureStorage private constructor(context: Context) {
         get() = prefs.getBoolean(KEY_KILL_SWITCH, true)
         set(value) = prefs.edit().putBoolean(KEY_KILL_SWITCH, value).apply()
 
+    var autoConnectEnabled: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_CONNECT, false)
+        set(value) = prefs.edit().putBoolean(KEY_AUTO_CONNECT, value).apply()
+
+    var dnsServer: String
+        get() = prefs.getString(KEY_DNS_SERVER, "1.1.1.1") ?: "1.1.1.1"
+        set(value) = prefs.edit().putString(KEY_DNS_SERVER, value).apply()
+
+    var themePreference: String
+        get() = prefs.getString(KEY_THEME, "system") ?: "system"
+        set(value) = prefs.edit().putString(KEY_THEME, value).apply()
+
+    var protocol: String
+        get() = prefs.getString(KEY_PROTOCOL, "socks5") ?: "socks5"
+        set(value) = prefs.edit().putString(KEY_PROTOCOL, value).apply()
+
+    var ipv6LeakProtection: Boolean
+        get() = prefs.getBoolean(KEY_IPV6_PROTECT, true)
+        set(value) = prefs.edit().putBoolean(KEY_IPV6_PROTECT, value).apply()
+
+    var connectionAlerts: Boolean
+        get() = prefs.getBoolean(KEY_CONN_ALERTS, true)
+        set(value) = prefs.edit().putBoolean(KEY_CONN_ALERTS, value).apply()
+
+    var totalSessionTime: Long
+        get() = prefs.getLong(KEY_TOTAL_SESSION, 0L)
+        set(value) = prefs.edit().putLong(KEY_TOTAL_SESSION, value).apply()
+
+    var totalDataDown: Long
+        get() = prefs.getLong(KEY_TOTAL_DOWN, 0L)
+        set(value) = prefs.edit().putLong(KEY_TOTAL_DOWN, value).apply()
+
+    var totalDataUp: Long
+        get() = prefs.getLong(KEY_TOTAL_UP, 0L)
+        set(value) = prefs.edit().putLong(KEY_TOTAL_UP, value).apply()
+
     fun clear() {
+        val theme = themePreference
         prefs.edit().clear().apply()
+        prefs.edit().putString(KEY_THEME, theme).apply()
     }
 
     companion object {
@@ -76,6 +114,15 @@ class SecureStorage private constructor(context: Context) {
         private const val KEY_PREMIUM_EXPIRES = "premium_expires_at"
         private const val KEY_SELECTED_PROXY = "selected_proxy"
         private const val KEY_KILL_SWITCH = "kill_switch_enabled"
+        private const val KEY_AUTO_CONNECT = "auto_connect_enabled"
+        private const val KEY_DNS_SERVER = "dns_server"
+        private const val KEY_THEME = "theme_preference"
+        private const val KEY_PROTOCOL = "protocol"
+        private const val KEY_IPV6_PROTECT = "ipv6_leak_protection"
+        private const val KEY_CONN_ALERTS = "connection_alerts"
+        private const val KEY_TOTAL_SESSION = "total_session_time"
+        private const val KEY_TOTAL_DOWN = "total_data_down"
+        private const val KEY_TOTAL_UP = "total_data_up"
 
         @Volatile
         private var instance: SecureStorage? = null
