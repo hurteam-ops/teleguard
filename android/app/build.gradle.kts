@@ -31,7 +31,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"http://bore.pub:37435\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://onyxserver-2.tailfb3bc5.ts.net\"")
         }
     }
 
