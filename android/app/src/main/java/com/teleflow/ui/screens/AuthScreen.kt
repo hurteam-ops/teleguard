@@ -64,7 +64,7 @@ fun AuthScreen(
                         .background(TeleBlue.copy(alpha = 0.08f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Telegram, null, Modifier.size(42.dp), TeleBlue)
+                    Icon(Icons.Filled.Send, null, Modifier.size(42.dp), TeleBlue)
                 }
             }
 
