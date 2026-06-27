@@ -31,7 +31,7 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            buildConfigField("String", "API_BASE_URL", "\"http://192.168.1.4:8081\"")
+            buildConfigField("String", "API_BASE_URL", "\"http://bore.pub:37435\"")
         }
     }
 
