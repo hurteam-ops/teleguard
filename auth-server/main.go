@@ -627,7 +627,7 @@ func (s *authServer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 				line = strings.TrimSpace(line)
 				if line == "" { continue }
 				parts := strings.Split(line, ":")
-				if len(parts) >= 2 {
+				if len(parts) >= 4 {
 					loc := locations[i%len(locations)]
 					n, _ := rand.Int(rand.Reader, big.NewInt(200))
 					l, _ := rand.Int(rand.Reader, big.NewInt(80))
@@ -641,6 +641,8 @@ func (s *authServer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 						"country":     loc.Country,
 						"countryCode": loc.CountryCode,
 						"city":        loc.City,
+						"username":    parts[2],
+						"password":    parts[3],
 						"latency":     n.Int64(),
 						"load":        l.Int64(),
 						"protocol":    "socks5",
@@ -688,7 +690,7 @@ func (s *authServer) handleGetProxies(w http.ResponseWriter, r *http.Request) {
 				line = strings.TrimSpace(line)
 				if line == "" { continue }
 				parts := strings.Split(line, ":")
-				if len(parts) >= 2 {
+				if len(parts) >= 4 {
 					loc := locations[i%len(locations)]
 					n, _ := rand.Int(rand.Reader, big.NewInt(200))
 					l, _ := rand.Int(rand.Reader, big.NewInt(80))
@@ -702,6 +704,8 @@ func (s *authServer) handleGetProxies(w http.ResponseWriter, r *http.Request) {
 						"country":     loc.Country,
 						"countryCode": loc.CountryCode,
 						"city":        loc.City,
+						"username":    parts[2],
+						"password":    parts[3],
 						"latency":     n.Int64(),
 						"load":        l.Int64(),
 						"protocol":    "socks5",

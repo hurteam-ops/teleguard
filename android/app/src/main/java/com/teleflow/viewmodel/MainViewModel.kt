@@ -163,6 +163,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val proxy = _proxies.value.find { it.ip == selected }
             if (proxy != null) {
                 intent.putExtra(TeleFlowVpnService.EXTRA_PROXY, proxyToJson(proxy))
+                intent.putExtra(TeleFlowVpnService.EXTRA_SOCKS_USER, proxy.username)
+                intent.putExtra(TeleFlowVpnService.EXTRA_SOCKS_PASS, proxy.password)
             }
         }
 

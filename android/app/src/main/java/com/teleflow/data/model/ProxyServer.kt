@@ -10,6 +10,8 @@ data class ProxyServer(
     val country: String = "",
     val countryCode: String = "",
     val city: String = "",
+    val username: String = "",
+    val password: String = "",
     val latency: Int = 0,
     val load: Int = 0,
     val protocol: String = "socks5",
