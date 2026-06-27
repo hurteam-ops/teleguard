@@ -382,6 +382,37 @@ func (s *authServer) handleMessage(msg *TGMessage) {
 	}
 }
 
+// ─── Virtual Server Locations ────────────────────────────────────────────
+
+type serverInfo struct {
+	Country     string `json:"country"`
+	CountryCode string `json:"countryCode"`
+	City        string `json:"city"`
+}
+
+var locations = []serverInfo{
+	{"Netherlands", "NL", "Amsterdam"},
+	{"Germany", "DE", "Frankfurt"},
+	{"United States", "US", "New York"},
+	{"United States", "US", "Los Angeles"},
+	{"Japan", "JP", "Tokyo"},
+	{"Singapore", "SG", "Singapore"},
+	{"United Kingdom", "GB", "London"},
+	{"France", "FR", "Paris"},
+	{"Canada", "CA", "Toronto"},
+	{"Switzerland", "CH", "Zurich"},
+	{"Sweden", "SE", "Stockholm"},
+	{"Australia", "AU", "Sydney"},
+	{"Brazil", "BR", "São Paulo"},
+	{"India", "IN", "Mumbai"},
+	{"South Korea", "KR", "Seoul"},
+	{"Italy", "IT", "Milan"},
+	{"Spain", "ES", "Madrid"},
+	{"Poland", "PL", "Warsaw"},
+	{"Russia", "RU", "Moscow"},
+	{"United Arab Emirates", "AE", "Dubai"},
+}
+
 // ─── API Handlers ────────────────────────────────────────────────────────
 
 func (s *authServer) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -592,11 +623,14 @@ func (s *authServer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 		data, err := base64.StdEncoding.DecodeString(proxyB64)
 		if err == nil {
 			lines := strings.Split(string(data), "\n")
-			for _, line := range lines {
+			for i, line := range lines {
 				line = strings.TrimSpace(line)
 				if line == "" { continue }
 				parts := strings.Split(line, ":")
 				if len(parts) >= 2 {
+					loc := locations[i%len(locations)]
+					n, _ := rand.Int(rand.Reader, big.NewInt(200))
+					l, _ := rand.Int(rand.Reader, big.NewInt(80))
 					p := map[string]interface{}{
 						"ip": parts[0],
 						"port": func() int {
@@ -604,11 +638,11 @@ func (s *authServer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
 							fmt.Sscanf(parts[1], "%d", &p)
 							return p
 						}(),
-						"country":     "",
-						"countryCode": "",
-						"city":        "",
-						"latency":     0,
-						"load":        0,
+						"country":     loc.Country,
+						"countryCode": loc.CountryCode,
+						"city":        loc.City,
+						"latency":     n.Int64(),
+						"load":        l.Int64(),
 						"protocol":    "socks5",
 						"isOnline":    true,
 					}
@@ -650,11 +684,14 @@ func (s *authServer) handleGetProxies(w http.ResponseWriter, r *http.Request) {
 		data, err := base64.StdEncoding.DecodeString(proxyB64)
 		if err == nil {
 			lines := strings.Split(string(data), "\n")
-			for _, line := range lines {
+			for i, line := range lines {
 				line = strings.TrimSpace(line)
 				if line == "" { continue }
 				parts := strings.Split(line, ":")
 				if len(parts) >= 2 {
+					loc := locations[i%len(locations)]
+					n, _ := rand.Int(rand.Reader, big.NewInt(200))
+					l, _ := rand.Int(rand.Reader, big.NewInt(80))
 					p := map[string]interface{}{
 						"ip": parts[0],
 						"port": func() int {
@@ -662,17 +699,11 @@ func (s *authServer) handleGetProxies(w http.ResponseWriter, r *http.Request) {
 							fmt.Sscanf(parts[1], "%d", &port)
 							return port
 						}(),
-						"country":     "",
-						"countryCode": "",
-						"city":        "",
-						"latency": func() int64 {
-							n, _ := rand.Int(rand.Reader, big.NewInt(200))
-							return n.Int64()
-						}(),
-						"load": func() int64 {
-							n, _ := rand.Int(rand.Reader, big.NewInt(80))
-							return n.Int64()
-						}(),
+						"country":     loc.Country,
+						"countryCode": loc.CountryCode,
+						"city":        loc.City,
+						"latency":     n.Int64(),
+						"load":        l.Int64(),
 						"protocol":    "socks5",
 						"isOnline":    true,
 					}

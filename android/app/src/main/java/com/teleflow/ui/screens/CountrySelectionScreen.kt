@@ -131,13 +131,24 @@ fun CountrySelectionScreen(
                         )
                     }
 
-                    itemsIndexed(list, key = { _, p -> p.ip }) { i, proxy ->
-                        val locked = !premium
-                        ServerRow(
-                            flag = flag(proxy.countryCode),
-                            name = proxy.country.ifEmpty { proxy.ip },
-                            sub = if (proxy.city.isNotBlank()) "${proxy.city} · ${proxy.ip}" else proxy.ip,
-                            latency = proxy.latency,
+                itemsIndexed(list, key = { _, p -> p.ip }) { i, proxy ->
+                    val locked = !premium
+                    val displayName = buildString {
+                        if (proxy.country.isNotBlank()) append(proxy.country)
+                        if (proxy.city.isNotBlank()) {
+                            if (isNotEmpty()) append(" · ")
+                            append(proxy.city)
+                        }
+                        if (isEmpty()) append(proxy.ip)
+                    }
+                    val subtitle = if (proxy.country.isNotBlank() || proxy.city.isNotBlank())
+                        "${proxy.ip}:${proxy.port}"
+                    else ""
+                    ServerRow(
+                        flag = flag(proxy.countryCode),
+                        name = displayName,
+                        sub = subtitle,
+                        latency = proxy.latency,
                             load = proxy.load,
                             isSelected = selected == proxy.ip,
                             isLocked = locked,
