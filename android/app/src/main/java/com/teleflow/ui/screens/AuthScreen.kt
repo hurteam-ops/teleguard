@@ -2,7 +2,6 @@ package com.teleflow.ui.screens
 
 import android.content.Intent
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -24,38 +22,15 @@ import androidx.compose.ui.unit.sp
 import com.teleflow.BuildConfig
 import com.teleflow.ui.theme.*
 import com.teleflow.viewmodel.MainViewModel
-import kotlinx.coroutines.delay
 
 @Composable
 fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
     val ctx = LocalContext.current
     val authed by vm.isAuthenticated.collectAsState()
-    val error by vm.error.collectAsState()
-
-    var authCode by remember { mutableStateOf<String?>(null) }
-    var authStatus by remember { mutableStateOf<String?>(null) }
-    var isPolling by remember { mutableStateOf(false) }
+    val authCode by vm.authCode.collectAsState()
+    val authStatus by vm.authStatus.collectAsState()
 
     LaunchedEffect(authed) { if (authed) onDone() }
-
-    LaunchedEffect(isPolling, authCode) {
-        if (isPolling && authCode != null) {
-            val code = authCode!!
-            while (true) {
-                delay(3000)
-                val result = vm.repository.checkPendingAuth(code)
-                result.onSuccess { resp ->
-                    when (resp.status) {
-                        "claimed" -> {
-                            authStatus = "claimed"
-                            if (resp.token != null) vm.completeAuth(resp.token, resp.user)
-                            return@LaunchedEffect
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { pad ->
         Column(
@@ -64,7 +39,7 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
         ) {
             Spacer(Modifier.height(48.dp))
 
-            if (authStatus == "claimed") {
+            if (authCode != null && authStatus == "claimed") {
                 Text("Authentication successful!", fontWeight = FontWeight.Bold, fontSize = 24.sp, color = Green)
                 Spacer(Modifier.height(16.dp))
                 Box(Modifier.size(64.dp).clip(CircleShape).background(Green.copy(alpha = 0.12f)), contentAlignment = Alignment.Center) {
@@ -99,7 +74,7 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
                     CircularProgressIndicator(Modifier.size(14.dp), color = TeleBlue, strokeWidth = 2.dp)
                     Spacer(Modifier.width(10.dp))
-                    Text("Waiting for you to send the code…", fontSize = 13.sp, color = TextSecondary)
+                    Text("Waiting…", fontSize = 13.sp, color = TextSecondary)
                 }
             } else {
                 Text("Sign in with Telegram", fontWeight = FontWeight.Bold, fontSize = 24.sp)
@@ -108,13 +83,8 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
 
                 Spacer(Modifier.height(32.dp))
 
-                Button(onClick = {
-                    val code = (1..6).map { "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".random() }.joinToString("")
-                    Toast.makeText(ctx, "Code: $code", Toast.LENGTH_LONG).show()
-                    authCode = code
-                    authStatus = "pending"
-                    isPolling = true
-                }, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = TeleBlue)) {
+                Button(onClick = { vm.startAuth() },
+                    modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(14.dp), colors = ButtonDefaults.buttonColors(containerColor = TeleBlue)) {
                     Icon(Icons.Filled.Send, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(10.dp))
                     Text("Sign in with Telegram", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
@@ -125,7 +95,7 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
                     Column(Modifier.padding(18.dp)) {
                         Text("How it works", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                         Spacer(Modifier.height(12.dp))
-                        Step(1, "Tap the button above")
+                        Step(1, "Tap the button")
                         Step(2, "A code appears — send it to @${BuildConfig.TG_BOT_USERNAME}")
                         Step(3, "You're authenticated")
                     }
@@ -135,10 +105,6 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
             Spacer(Modifier.weight(1f))
             Spacer(Modifier.height(40.dp))
         }
-    }
-
-    error?.let {
-        AlertDialog(onDismissRequest = { vm.clearError() }, title = { Text("Error") }, text = { Text(it) }, confirmButton = { TextButton({ vm.clearError() }) { Text("OK") } })
     }
 }
 

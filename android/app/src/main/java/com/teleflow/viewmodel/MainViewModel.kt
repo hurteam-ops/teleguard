@@ -267,39 +267,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun startAuthPolling(code: String) {
         authPollJob?.cancel()
         authPollJob = viewModelScope.launch {
-            _authStatus.value = "pending"
-            while (true) {
-                delay(3000)
-                val result = repository.checkPendingAuth(code)
-                result.onSuccess { resp ->
-                    when (resp.status) {
-                        "claimed" -> {
-                            _authStatus.value = "claimed"
-                            if (resp.token != null) {
-                                secureStorage.authToken = resp.token
-                                secureStorage.tokenExpiresAt = resp.user?.tokenExpiresAt ?: 0L
-                                secureStorage.userId = resp.user?.id ?: 0L
-                                secureStorage.username = resp.user?.username ?: ""
-                                secureStorage.isPremium = resp.user?.isPremium ?: false
-                                _isAuthenticated.value = true
-                                _isPremium.value = resp.user?.isPremium ?: false
-                                loadProxies()
+            try {
+                _authStatus.value = "pending"
+                while (true) {
+                    delay(3000)
+                    try {
+                        val result = repository.checkPendingAuth(code)
+                        result.onSuccess { resp ->
+                            when (resp.status) {
+                                "claimed" -> {
+                                    _authStatus.value = "claimed"
+                                    if (resp.token != null) {
+                                        completeAuth(resp.token, resp.user)
+                                    }
+                                    authPollJob?.cancel()
+                                    return@launch
+                                }
                             }
-                            authPollJob?.cancel()
-                            return@launch
                         }
-                        "invalid" -> {
-                            _error.value = "Auth code expired. Please try again."
-                            _authStatus.value = null
-                            _authCode.value = null
-                            authPollJob?.cancel()
-                            return@launch
-                        }
-                    }
-                }.onFailure {
-                    // Silently retry on network errors
+                    } catch (_: Exception) { }
                 }
-            }
+            } catch (_: Exception) { }
         }
     }
 
