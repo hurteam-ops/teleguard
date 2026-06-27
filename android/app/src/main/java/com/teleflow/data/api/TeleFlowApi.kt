@@ -1,14 +1,8 @@
 package com.teleflow.data.api
 
-import com.teleflow.data.model.AuthRequest
-import com.teleflow.data.model.AuthResponse
-import com.teleflow.data.model.PremiumStatus
-import com.teleflow.data.model.ServerConfig
+import com.teleflow.data.model.*
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.POST
+import retrofit2.http.*
 
 interface TeleFlowApi {
 
@@ -20,6 +14,14 @@ interface TeleFlowApi {
         @Header("Authorization") token: String
     ): Response<PremiumStatus>
 
+    @POST("api/v1/auth/init")
+    suspend fun initAuth(): Response<InitAuthResponse>
+
+    @GET("api/v1/auth/pending/{code}")
+    suspend fun checkPendingAuth(
+        @Path("code") code: String
+    ): Response<PendingAuthResponse>
+
     @GET("api/v1/config")
     suspend fun getConfig(
         @Header("Authorization") token: String
@@ -28,7 +30,7 @@ interface TeleFlowApi {
     @GET("api/v1/proxies")
     suspend fun getProxies(
         @Header("Authorization") token: String
-    ): Response<List<com.teleflow.data.model.ProxyServer>>
+    ): Response<List<ProxyServer>>
 
     @GET("api/v1/health")
     suspend fun health(): Response<Unit>

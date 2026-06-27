@@ -69,6 +69,32 @@ class TeleFlowRepository(private val secureStorage: SecureStorage) {
         }
     }
 
+    suspend fun initAuth(): Result<InitAuthResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = ApiClient.api.initAuth()
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Auth init failed: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun checkPendingAuth(code: String): Result<PendingAuthResponse> = withContext(Dispatchers.IO) {
+        try {
+            val response = ApiClient.api.checkPendingAuth(code)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Pending check failed: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     fun getAuthToken(): String = secureStorage.authToken
     fun isAuthenticated(): Boolean = secureStorage.isAuthenticated
     fun isPremium(): Boolean = secureStorage.isPremium

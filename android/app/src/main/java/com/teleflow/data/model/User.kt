@@ -40,6 +40,19 @@ data class PremiumStatus(
 )
 
 @Serializable
+data class InitAuthResponse(
+    val code: String
+)
+
+@Serializable
+data class PendingAuthResponse(
+    val status: String,
+    val token: String? = null,
+    val user: User? = null,
+    val error: String? = null
+)
+
+@Serializable
 data class ServerConfig(
     val proxies: List<ProxyServer>,
     val defaultProxy: String,

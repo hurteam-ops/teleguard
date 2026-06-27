@@ -16,6 +16,8 @@ config.yml
 backend/tmp/
 backend/bin/
 backend/vendor/
+# Binaries
+auth-server/auth-server
 *.exe
 *.test
 *.out

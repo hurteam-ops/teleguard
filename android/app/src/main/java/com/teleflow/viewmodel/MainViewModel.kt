@@ -77,6 +77,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _totalDataUp = MutableStateFlow(0L)
     val totalDataUp: StateFlow<Long> = _totalDataUp.asStateFlow()
 
+    private val _authCode = MutableStateFlow<String?>(null)
+    val authCode: StateFlow<String?> = _authCode.asStateFlow()
+
+    private val _authStatus = MutableStateFlow<String?>(null)
+    val authStatus: StateFlow<String?> = _authStatus.asStateFlow()
+
+    private var authPollJob: Job? = null
+
     private var timerJob: Job? = null
     private var connectedAtMs: Long = 0L
     private var lastBytesDown: Long = 0L
@@ -232,6 +240,63 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun startAuth() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            _authStatus.value = null
+            val result = repository.initAuth()
+            result.onSuccess {
+                _authCode.value = it.code
+                _isLoading.value = false
+                _authStatus.value = "pending"
+                startAuthPolling(it.code)
+            }.onFailure { e ->
+                _error.value = e.message ?: "Failed to start auth"
+                _isLoading.value = false
+            }
+        }
+    }
+
+    private fun startAuthPolling(code: String) {
+        authPollJob?.cancel()
+        authPollJob = viewModelScope.launch {
+            _authStatus.value = "pending"
+            while (true) {
+                delay(3000)
+                val result = repository.checkPendingAuth(code)
+                result.onSuccess { resp ->
+                    when (resp.status) {
+                        "claimed" -> {
+                            _authStatus.value = "claimed"
+                            if (resp.token != null) {
+                                secureStorage.authToken = resp.token
+                                secureStorage.tokenExpiresAt = resp.user?.tokenExpiresAt ?: 0L
+                                secureStorage.userId = resp.user?.id ?: 0L
+                                secureStorage.username = resp.user?.username ?: ""
+                                secureStorage.isPremium = resp.user?.isPremium ?: false
+                                _isAuthenticated.value = true
+                                _isPremium.value = resp.user?.isPremium ?: false
+                                loadProxies()
+                            }
+                            authPollJob?.cancel()
+                            return@launch
+                        }
+                        "invalid" -> {
+                            _error.value = "Auth code expired. Please try again."
+                            _authStatus.value = null
+                            _authCode.value = null
+                            authPollJob?.cancel()
+                            return@launch
+                        }
+                    }
+                }.onFailure {
+                    // Silently retry on network errors
+                }
+            }
+        }
+    }
+
     private fun startTimer() {
         connectedAtMs = System.currentTimeMillis()
         lastBytesDown = 0
@@ -281,6 +346,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+        authPollJob?.cancel()
         try {
             LocalBroadcastManager.getInstance(getApplication()).unregisterReceiver(vpnStateReceiver)
         } catch (_: Exception) { }
