@@ -248,6 +248,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         startAuthPolling(code)
     }
 
+    fun completeAuth(token: String, user: com.teleflow.data.model.User?) {
+        secureStorage.authToken = token
+        secureStorage.tokenExpiresAt = user?.tokenExpiresAt ?: 0L
+        secureStorage.userId = user?.id ?: 0L
+        secureStorage.username = user?.username ?: ""
+        secureStorage.isPremium = user?.isPremium ?: false
+        _isAuthenticated.value = true
+        _isPremium.value = user?.isPremium ?: false
+        loadProxies()
+    }
+
     private fun generateAuthCode(): String {
         val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
         return (1..6).map { chars.random() }.joinToString("")
