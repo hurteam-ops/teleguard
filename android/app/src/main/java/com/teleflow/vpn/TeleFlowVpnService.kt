@@ -135,7 +135,8 @@ class TeleFlowVpnService : VpnService() {
         val tunIn = java.io.FileInputStream(tun.fileDescriptor)
         val tunOut = java.io.FileOutputStream(tun.fileDescriptor)
 
-        val sock = createTlsSocket(proxy.ip, proxy.port)
+        val useTls = proxy.protocol == "socks5-tls"
+        val sock = createTlsSocket(proxy.ip, proxy.port, useTls)
         proxySocket = sock
 
         socks5Handshake(sock, proxy.ip, proxy.port, socksUser, socksPass)
@@ -150,18 +151,26 @@ class TeleFlowVpnService : VpnService() {
         b.join()
     }
 
-    private fun createTlsSocket(host: String, port: Int): Socket {
+    private fun createTlsSocket(host: String, port: Int, useTls: Boolean): Socket {
+        if (!useTls) {
+            return Socket().also {
+                it.connect(InetSocketAddress(host, port), 10_000)
+                it.soTimeout = 15_000
+            }
+        }
         return try {
             val sslCtx = SSLContext.getInstance("TLSv1.3")
             sslCtx.init(null, arrayOf(trustAllCerts), java.security.SecureRandom())
             val factory = sslCtx.socketFactory
             val tlsSocket = factory.createSocket() as SSLSocket
             tlsSocket.connect(InetSocketAddress(host, port), 10_000)
+            tlsSocket.soTimeout = 5_000
             tlsSocket.startHandshake()
             tlsSocket
         } catch (_: Exception) {
             Socket().also {
                 it.connect(InetSocketAddress(host, port), 10_000)
+                it.soTimeout = 15_000
             }
         }
     }
