@@ -71,11 +71,7 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
                 }
 
                 Spacer(Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
-                    CircularProgressIndicator(Modifier.size(14.dp), color = TeleBlue, strokeWidth = 2.dp)
-                    Spacer(Modifier.width(10.dp))
-                    Text("Waiting…", fontSize = 13.sp, color = TextSecondary)
-                }
+                Text("Waiting for you to send the code…", fontSize = 13.sp, color = TextSecondary)
             } else {
                 Text("Sign in with Telegram", fontWeight = FontWeight.Bold, fontSize = 24.sp)
                 Spacer(Modifier.height(12.dp))
