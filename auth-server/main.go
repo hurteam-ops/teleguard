@@ -260,10 +260,10 @@ func (s *authServer) startPolling() {
 	go func() {
 		offset := int64(0)
 		for {
-			updates, err := s.getUpdates(offset, 30)
+			updates, err := s.getUpdates(offset, 5)
 			if err != nil {
 				log.Printf("Polling error: %v", err)
-				time.Sleep(3 * time.Second)
+				time.Sleep(2 * time.Second)
 				continue
 			}
 			for _, u := range updates {
