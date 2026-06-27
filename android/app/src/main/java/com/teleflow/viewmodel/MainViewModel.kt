@@ -159,13 +159,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         val selected = _selectedProxyId.value
-        if (selected != "auto") {
-            val proxy = _proxies.value.find { it.ip == selected }
-            if (proxy != null) {
-                intent.putExtra(TeleFlowVpnService.EXTRA_PROXY, proxyToJson(proxy))
-                intent.putExtra(TeleFlowVpnService.EXTRA_SOCKS_USER, proxy.username)
-                intent.putExtra(TeleFlowVpnService.EXTRA_SOCKS_PASS, proxy.password)
-            }
+        val proxy = if (selected != "auto") {
+            _proxies.value.find { it.ip == selected }
+        } else {
+            _proxies.value.firstOrNull()
+        }
+        if (proxy != null) {
+            intent.putExtra(TeleFlowVpnService.EXTRA_PROXY, proxyToJson(proxy))
+            intent.putExtra(TeleFlowVpnService.EXTRA_SOCKS_USER, proxy.username)
+            intent.putExtra(TeleFlowVpnService.EXTRA_SOCKS_PASS, proxy.password)
         }
 
         context.startForegroundService(intent)
