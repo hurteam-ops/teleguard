@@ -345,6 +345,20 @@ func (s *authServer) handleMessage(msg *TGMessage) {
 				pa.FirstName = firstName
 				pa.LastName = lastName
 				pa.IsPremium = isPremium
+			} else if !ok {
+				// Code not known yet — app will generate it locally and poll.
+				// Create the entry as claimed since the user already messaged the bot.
+				s.pending[code] = &pendingAuth{
+					Code:      code,
+					UserID:    userID,
+					Username:  username,
+					FirstName: firstName,
+					LastName:  lastName,
+					IsPremium: isPremium,
+					CreatedAt: time.Now(),
+					ClaimedAt: time.Now(),
+					Claimed:   true,
+				}
 			}
 			s.mu.Unlock()
 
@@ -527,7 +541,7 @@ func (s *authServer) handlePendingCheck(w http.ResponseWriter, r *http.Request) 
 	s.mu.RUnlock()
 
 	if !ok {
-		writeJSON(w, http.StatusOK, PendingResponse{Status: "invalid"})
+		writeJSON(w, http.StatusOK, PendingResponse{Status: "pending"})
 		return
 	}
 	if !pa.Claimed {

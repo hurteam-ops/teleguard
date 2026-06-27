@@ -241,21 +241,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startAuth() {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-            _authStatus.value = null
-            val result = repository.initAuth()
-            result.onSuccess {
-                _authCode.value = it.code
-                _isLoading.value = false
-                _authStatus.value = "pending"
-                startAuthPolling(it.code)
-            }.onFailure { e ->
-                _error.value = e.message ?: "Failed to start auth"
-                _isLoading.value = false
-            }
-        }
+        val code = generateAuthCode()
+        _authCode.value = code
+        _authStatus.value = "pending"
+        _isLoading.value = false
+        startAuthPolling(code)
+    }
+
+    private fun generateAuthCode(): String {
+        val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        return (1..6).map { chars.random() }.joinToString("")
     }
 
     private fun startAuthPolling(code: String) {
