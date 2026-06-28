@@ -19,8 +19,6 @@ import (
 	"time"
 )
 
-// ─── Models ──────────────────────────────────────────────────────────────
-
 type AuthRequest struct {
 	ID        int64  `json:"id"`
 	FirstName string `json:"firstName"`
@@ -65,8 +63,6 @@ type PendingResponse struct {
 	Error  string      `json:"error,omitempty"`
 }
 
-// ─── Telegram Bot Models ─────────────────────────────────────────────────
-
 type TGUpdate struct {
 	UpdateID int64      `json:"update_id"`
 	Message  *TGMessage `json:"message,omitempty"`
@@ -106,8 +102,6 @@ type TGSendMessageReq struct {
 	ParseMode string `json:"parse_mode,omitempty"`
 }
 
-// ─── In-Memory Storage ───────────────────────────────────────────────────
-
 type pendingAuth struct {
 	Code       string
 	UserID     int64
@@ -136,8 +130,6 @@ func newServer(botToken, jwtSecret string) *authServer {
 		issued:    make(map[string]string),
 	}
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────
 
 func cors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -178,8 +170,6 @@ func randTokenBytes(n int) string {
 	return hex.EncodeToString(b)
 }
 
-// ─── JWT (simple HMAC-based, no external lib) ───────────────────────────
-
 func (s *authServer) signJWT(userID int64, username string, isPremium bool) (string, int64) {
 	expiresAt := time.Now().Add(24 * time.Hour).Unix()
 	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"HS256","typ":"JWT"}`))
@@ -217,8 +207,6 @@ func (s *authServer) verifySimpleJWT(token string) (map[string]interface{}, bool
 	return claims, true
 }
 
-// ─── Telegram Auth HMAC Verification ────────────────────────────────────
-
 func (s *authServer) verifyTelegramHash(req AuthRequest) bool {
 	if req.Hash == "" || len(s.jwtSecret) == 0 {
 		return false
@@ -253,8 +241,6 @@ func (s *authServer) verifyTelegramHash(req AuthRequest) bool {
 	expected := hex.EncodeToString(mac.Sum(nil))
 	return subtle.ConstantTimeCompare([]byte(req.Hash), []byte(expected)) == 1
 }
-
-// ─── Telegram Bot Polling ────────────────────────────────────────────────
 
 func (s *authServer) startPolling() {
 	go func() {
@@ -382,8 +368,6 @@ func (s *authServer) handleMessage(msg *TGMessage) {
 	}
 }
 
-// ─── Virtual Server Locations ────────────────────────────────────────────
-
 type serverInfo struct {
 	Country     string `json:"country"`
 	CountryCode string `json:"countryCode"`
@@ -412,8 +396,6 @@ var locations = []serverInfo{
 	{"Russia", "RU", "Moscow"},
 	{"United Arab Emirates", "AE", "Dubai"},
 }
-
-// ─── API Handlers ────────────────────────────────────────────────────────
 
 func (s *authServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]interface{}{
@@ -721,8 +703,6 @@ func (s *authServer) handleGetProxies(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, result)
 }
-
-// ─── Main ────────────────────────────────────────────────────────────────
 
 func main() {
 	botToken := os.Getenv("TELEGRAM_BOT_TOKEN")

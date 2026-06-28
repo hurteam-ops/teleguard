@@ -45,7 +45,6 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
             Spacer(Modifier.height(32.dp))
 
             if (authStatus == "claimed") {
-                // ── Success state ──
                 Spacer(Modifier.weight(0.3f))
                 Box(
                     Modifier.size(72.dp).clip(RoundedCornerShape(36.dp))
@@ -59,7 +58,6 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
                 Spacer(Modifier.weight(0.7f))
 
             } else if (authCode != null) {
-                // ── Code display state ──
                 Text("Step 2: Send the code", fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -146,7 +144,6 @@ fun AuthScreen(vm: MainViewModel, onDone: () -> Unit) {
                 }
 
             } else {
-                // ── Initial state: instructions + button ──
                 Spacer(Modifier.height(16.dp))
                 Text("Step 1: Start sign in", fontWeight = FontWeight.Bold, fontSize = 22.sp)
                 Spacer(Modifier.height(20.dp))
